@@ -504,37 +504,40 @@
             formattedText += `==============================\n\n`;
 
             formattedText += `1. 사고발생정보\n`;
-            formattedText += `사고 일시: ${data.formattedAccidentDate}\n`;
-            formattedText += `인적 피해: 사망 ${data.fatalities}명, 부상 ${data.injuries}명 (총 ${data.totalInjuries}명)\n`;
-            formattedText += `사고 내용 (발생 경위): \n${data.summary}\n\n`;
+            formattedText += `- 사고 일시: ${data.formattedAccidentDate}\n`;
+            formattedText += `- 인적 피해: 사망 ${data.fatalities}명, 부상 ${data.injuries}명 (총 ${data.totalInjuries}명)\n`;
+            formattedText += `- 사고 내용 (발생 경위): \n${data.summary}\n`; 
             
-            formattedText += `조치사항: \n${data.actionTaken}\n\n`; 
+            // ⭐⭐ 수정된 부분: 조치사항 앞에 하이픈과 공백 추가 ⭐⭐
+            formattedText += `- 조치사항: \n${data.actionTaken}\n\n`; 
             
             formattedText += `2. 사업장 현황\n`;
             
-            formattedText += `업체명: ${data.companyName}\n`;
-            formattedText += `현장명: ${data.siteName}\n`;
+            // ⭐⭐ 수정된 부분: 사업장 현황 내 모든 항목 앞에 하이픈과 공백 추가 ⭐⭐
+            formattedText += `- 업체명: ${data.companyName}\n`;
+            formattedText += `- 현장명: ${data.siteName}\n`;
             
             if (data.formattedConstructionPeriod) {
-                formattedText += `공사기간: ${data.formattedConstructionPeriod}\n`;
+                formattedText += `- 공사기간: ${data.formattedConstructionPeriod}\n`;
             }
             if (data.progressRate && data.progressRate !== '') {
-                formattedText += `공정율: ${data.progressRate} %\n`;
+                formattedText += `- 공정율: ${data.progressRate} %\n`;
             }
             if (data.projectScale && data.projectScale !== '') {
-                formattedText += `공사규모: ${data.projectScale}\n`;
+                formattedText += `- 공사규모: ${data.projectScale}\n`;
             }
             if (data.cost && data.cost !== '') { 
-                formattedText += `공사금액: ${data.cost} 원\n`;
+                formattedText += `- 공사금액: ${data.cost} 원\n`;
             }
             if (data.client && data.client !== '') {
-                formattedText += `발주자: ${data.client}\n`;
+                formattedText += `- 발주자: ${data.client}\n`;
             }
             formattedText += `\n`; 
 
             formattedText += `3. 보고기관 및 첨부\n`;
-            formattedText += `보고기관: ${data.reporter}\n`; 
-            formattedText += `첨부 사진: ${data.photoCount}장\n`; 
+            // ⭐⭐ 수정된 부분: 보고기관 앞에 하이픈과 공백 추가 ⭐⭐
+            formattedText += `- 보고기관: ${data.reporter}\n`; 
+            formattedText += `- 첨부 사진: ${data.photoCount}장\n`; 
             formattedText += `==============================\n`;
             
             return formattedText;
