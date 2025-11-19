@@ -22,6 +22,10 @@
             width: 100% !important; 
             box-sizing: border-box !important;
         }
+        /* textarea의 수직 정렬을 맨 위로 설정 */
+        textarea {
+            vertical-align: top; 
+        }
         input:focus, textarea:focus, select:focus { 
             border-color: #4f46e5;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.4);
@@ -152,7 +156,8 @@
                     </label>
                     <div class="input-with-voice space-x-2">
                         <textarea id="summary" name="summary" rows="4" required 
-                                     class="block w-full rounded-lg border-gray-300 shadow-sm resize-y transition duration-150"></textarea>
+                                     class="block w-full rounded-lg border-gray-300 shadow-sm resize-y transition duration-150"
+                                     placeholder="예: 지상 5층 높이의 비계 해체 작업 중, 근로자가 안전대를 미착용하고 이동하다 발을 헛디뎌 추락함."></textarea>
                         
                         <button type="button" id="voiceInputBtn" onclick="toggleVoiceInput('summary')" 
                                 class="bg-indigo-500 hover:bg-indigo-600 text-white p-3 rounded-lg shadow-md transition duration-150 voice-btn">
@@ -168,8 +173,7 @@
                     <div class="input-with-voice space-x-2">
                          <textarea id="actionTaken" name="actionTaken" rows="4" required 
                             class="block w-full rounded-lg border-gray-300 shadow-sm resize-y transition duration-150"
-                            placeholder="예: 사고 직후 작업 중지 조치, 인명 구조 활동, 관계 기관에 사고 발생 신고 등">
-                         </textarea>
+                            placeholder="00지역본부 건설안전부 0명, 00사고조사센터 0명 등"></textarea>
                          
                          <button type="button" onclick="toggleVoiceInput('actionTaken')" 
                             class="bg-indigo-500 hover:bg-indigo-600 text-white p-3 rounded-lg shadow-md transition duration-150 voice-btn">
@@ -297,11 +301,17 @@
         </div>
 
         <div id="report-output" class="mt-12 p-8 bg-white rounded-2xl shadow-xl border border-indigo-100 hidden">
-            <h3 class="text-xl font-bold text-indigo-700 mb-3">
-                <i class="fas fa-file-lines mr-2"></i> 복사할 내용 (수동 선택)
+            <h3 class="text-xl font-bold text-indigo-700 mb-3 flex justify-between items-center">
+                <span><i class="fas fa-file-lines mr-2"></i> 최종 보고서 내용 (수정 가능)</span>
+                <button type="button" onclick="copyToClipboard()" 
+                        class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 flex items-center text-sm">
+                    <i class="fas fa-copy mr-2"></i> 클립보드 복사
+                </button>
             </h3>
-            <div id="preview-text" class="copyable-output"></div>
-            <p id="copy-message" class="mt-4 text-base text-green-600 hidden font-medium flex items-center"></p>
+            <div id="preview-text" class="copyable-output" contenteditable="true"></div>
+            <p id="copy-message" class="mt-4 text-base text-green-600 hidden font-medium flex items-center">
+                <i class="fas fa-check-circle mr-2"></i> 내용이 성공적으로 복사되었습니다!
+            </p>
         </div>
 
         <div id="error-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden flex items-center justify-center z-50">
@@ -342,6 +352,37 @@
         function closeModal() {
             document.getElementById('error-modal').classList.add('hidden');
         }
+        
+        // =========================================================================
+        // 클립보드 복사 함수
+        // =========================================================================
+        function copyToClipboard() {
+            // contenteditable 영역의 텍스트를 가져옴
+            const textToCopy = document.getElementById('preview-text').innerText;
+            const copyMessage = document.getElementById('copy-message');
+
+            if (navigator.clipboard && window.isSecureContext) {
+                // 최신 Clipboard API 사용 (HTTPS 환경에서 동작)
+                navigator.clipboard.writeText(textToCopy)
+                    .then(() => {
+                        // 성공 메시지 표시
+                        copyMessage.innerText = '✅ 내용이 클립보드에 복사되었습니다!';
+                        copyMessage.classList.remove('hidden');
+                        setTimeout(() => {
+                            copyMessage.classList.add('hidden');
+                        }, 3000); // 3초 후 메시지 숨김
+                    })
+                    .catch(err => {
+                        // 복사 실패 시 에러 모달 표시
+                        openModal('클립보드 복사에 실패했습니다. 브라우저 보안 설정을 확인하거나 내용을 수동으로 복사해 주세요.');
+                        console.error('Could not copy text: ', err);
+                    });
+            } else {
+                // 구형 브라우저 또는 비보안 환경(HTTP) 폴백 (권장되지 않음)
+                openModal('❌ 클립보드 복사 API를 지원하지 않는 환경입니다. 내용을 직접 선택하여 복사해 주세요.');
+            }
+        }
+        // =========================================================================
 
         // 음성 인식을 시작/종료하는 토글 함수 (모든 텍스트 필드 지원)
         function toggleVoiceInput(inputId) {
@@ -446,6 +487,9 @@
                     document.getElementById('report-output').classList.remove('hidden');
                     document.getElementById('report-output').scrollIntoView({ behavior: 'smooth' });
                     
+                    // 복사 성공 메시지 숨김 (이전에 남아있을 경우 대비)
+                    document.getElementById('copy-message').classList.add('hidden'); 
+                    
                 } catch (e) {
                     console.error("Error creating or inserting text:", e);
                     openModal('보고서 내용을 생성하는 중 오류가 발생했습니다. (콘솔 확인)');
@@ -455,16 +499,16 @@
         
         // 텍스트 포맷 생성 함수
         function createFormattedText(data) {
-            let formattedText = `[사고조사 초동보고서]\n`;
+            let formattedText = `[건설 현장 사고 초동보고서]\n`;
             formattedText += `보고일: ${data.formattedReportDate}\n`;
             formattedText += `==============================\n\n`;
 
-            formattedText += `1. 사고 개요\n`;
+            formattedText += `1. 사고발생정보\n`;
             formattedText += `사고 일시: ${data.formattedAccidentDate}\n`;
             formattedText += `인적 피해: 사망 ${data.fatalities}명, 부상 ${data.injuries}명 (총 ${data.totalInjuries}명)\n`;
             formattedText += `사고 내용 (발생 경위): \n${data.summary}\n\n`;
             
-            formattedText += `조치사항: \n${data.actionTaken}\n\n`; // 조치사항 추가
+            formattedText += `조치사항: \n${data.actionTaken}\n\n`; 
             
             formattedText += `2. 사업장 현황\n`;
             
@@ -517,7 +561,7 @@
             const fatalities = getVal('fatalities') || 0; 
             const injuries = getVal('injuries') || 0;
             const summary = getVal('summary');
-            const actionTaken = getVal('actionTaken'); // 조치사항 ID 변경
+            const actionTaken = getVal('actionTaken'); 
             const reporter = getVal('reporter');
             
             const accidentPhotoEl = document.getElementById('accidentPhoto');
@@ -577,7 +621,7 @@
                 injuries: parseInt(injuries),
                 totalInjuries: parseInt(fatalities) + parseInt(injuries),
                 summary,
-                actionTaken, // 조치사항 데이터 반환
+                actionTaken, 
                 reporter,
                 formattedReportDate: formattedReportDate,
                 photoCount: photoCount
